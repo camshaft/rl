@@ -16,6 +16,27 @@ dep_rl = https://github.com/camshaft/rl.git master
 Usage
 -----
 
+The `rl` application will need to be started.
+
+```erlang
+application:start(rl).
+```
+
+This can be passed on the `erl` command:
+
+```sh
+$ erl -s rl
+```
+
+The default `make` settings can be loaded as well:
+
+```sh
+$ erl -s rl make
+```
+
+API
+---
+
 ### rl:compiler(Wildcard, Action) -> ok when Wildcard::string(), Action::fun().
 
 Adds a compiler to the rl server. The `Action` will be called anytime a file changed that matches the `Wildcard`:
