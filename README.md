@@ -13,6 +13,14 @@ DEPS = rl
 dep_rl = https://github.com/camshaft/rl.git master
 ```
 
+### $ERL_LIBS (globally)
+
+```sh
+$ cd $ERL_LIBS
+$ git clone https://github.com/camshaft/rl.git
+$ cd rl; make
+```
+
 Usage
 -----
 
