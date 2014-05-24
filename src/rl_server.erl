@@ -133,7 +133,7 @@ diff(Now, Prev, File) ->
     {ok, _} ->
       noop;
     {error, enoent} ->
-      removed;
+      noop;
     {error, Reason} ->
       error_logger:error_msg("Error reading ~s's file info ~p~n", [File, Reason]),
       noop
@@ -151,6 +151,13 @@ do_action(_, _, noop) ->
 do_action(File, Action, Event) when is_pid(Action) ->
   Action ! {Event, File};
 do_action(File, Action, Event) when is_function(Action) ->
-  Action(Event, File);
+  case erlang:fun_info(Action, arity) of
+    0 ->
+      Action();
+    1 ->
+      Action(File);
+    2 ->
+      Action(Event, File)
+  end;
 do_action(File, Action, Event) when is_atom(Action) ->
   Action:Event(File).

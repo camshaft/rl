@@ -16,11 +16,11 @@ runner(Action) ->
 
 make() ->
   start(),
-  rl_server:compiler("src/*.?rl", fun(_Event, _File) ->
+  rl_server:compiler("src/*.?rl", fun() ->
     io:format("~n*** make app~n"),
     io:format("~s~n", [os:cmd("make app")])
   end),
-  rl_server:compiler("deps/**/src/*.?rl", fun(_Event, _File) ->
+  rl_server:compiler("deps/**/src/*.?rl", fun() ->
     io:format("~n*** make deps~n"),
     io:format("~s~n", [os:cmd("make deps")])
   end).
