@@ -152,11 +152,11 @@ do_action(File, Action, Event) when is_pid(Action) ->
   Action ! {Event, File};
 do_action(File, Action, Event) when is_function(Action) ->
   case erlang:fun_info(Action, arity) of
-    0 ->
+    {arity,0} ->
       Action();
-    1 ->
+    {arity,1} ->
       Action(File);
-    2 ->
+    {arity,2} ->
       Action(Event, File)
   end;
 do_action(File, Action, Event) when is_atom(Action) ->
