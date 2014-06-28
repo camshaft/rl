@@ -42,6 +42,12 @@ The default `make` settings can be loaded as well:
 $ erl -s rl make
 ```
 
+A pattern/command may also be specified:
+
+```sh
+$ erl -s rl cmd 'src/*.jxa' 'make joxa'
+```
+
 API
 ---
 

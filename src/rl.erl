@@ -4,6 +4,7 @@
 -export([compiler/2]).
 -export([runner/1]).
 -export([make/0]).
+-export([cmd/1]).
 
 start() ->
   ok = application:ensure_started(rl).
@@ -15,12 +16,13 @@ runner(Action) ->
   rl_server:runner(Action).
 
 make() ->
+  cmd(["src/*.?rl", "make app"]).
+
+cmd([RE, CMD]) when is_atom(RE) ->
+  cmd([atom_to_list(RE), atom_to_list(CMD)]);
+cmd([RE, CMD]) ->
   start(),
-  rl_server:compiler("src/*.?rl", fun() ->
-    io:format("~n*** make app~n"),
-    io:format("~s~n", [os:cmd("make app")])
-  end),
-  rl_server:compiler("deps/**/src/*.?rl", fun() ->
-    io:format("~n*** make deps~n"),
-    io:format("~s~n", [os:cmd("make deps")])
+  rl_server:compiler(RE, fun() ->
+    io:format("~n*** ~p~n", [CMD]),
+    io:format("~s~n", [os:cmd(CMD)])
   end).
