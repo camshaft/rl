@@ -5,6 +5,7 @@
 -export([runner/1]).
 -export([make/0]).
 -export([cmd/1]).
+-export([reload/0]).
 
 start() ->
   ok = application:ensure_started(rl).
@@ -26,3 +27,6 @@ cmd([RE, CMD]) ->
     io:format("~n*** ~p~n", [CMD]),
     io:format("~s~n", [os:cmd(CMD)])
   end).
+
+reload() ->
+  rl_server:reload().

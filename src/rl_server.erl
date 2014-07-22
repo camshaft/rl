@@ -3,9 +3,11 @@
 
 %% API.
 -export([start_link/0]).
+-export([start_link/1]).
 -export([stop/0]).
 -export([compiler/2]).
 -export([runner/1]).
+-export([reload/0]).
 
 %% gen_server.
 -export([init/1]).
@@ -30,7 +32,11 @@
 
 -spec start_link() -> {ok, pid()}.
 start_link() ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+  start_link(automatic).
+
+-spec start_link(automatic | enabled) -> {ok, pid()}.
+start_link(Mode) ->
+  gen_server:start_link({local, ?MODULE}, ?MODULE, [Mode], []).
 
 -spec stop() -> stopped.
 stop() ->
@@ -44,13 +50,19 @@ compiler(Pattern, Action) ->
 runner(Action) ->
   gen_server:cast(?MODULE, {runner, Action}).
 
+reload() ->
+  gen_server:cast(?MODULE, reload).
+
 %% gen_server.
 
 -spec init([]) -> {ok, #state{}}.
-init([]) ->
+init([automatic]) ->
   Now = erlang:localtime(),
   TRef = erlang:send_after(1000, self(), reload),
-  {ok, #state{tref = TRef, prev = Now}}.
+  {ok, #state{tref = TRef, prev = Now}};
+init([manual]) ->
+  Now = erlang:localtime(),
+  {ok, #state{prev = Now}}.
 
 -spec handle_call(any(), _, State) -> {reply, ignored, State} | {stop, normal, stopped, State} when State::#state{}.
 handle_call(stop, _From, State = #state{tref = TRef}) ->
@@ -64,16 +76,24 @@ handle_cast({compiler, Pattern, Action}, State = #state{compilers = Compilers}) 
   {noreply, State#state{compilers = [{Pattern, Action}|Compilers]}};
 handle_cast({runner, Action}, State = #state{runners = Runners}) ->
   {noreply, State#state{runners = [Action|Runners]}};
+handle_cast(reload, State) ->
+  self() ! reload,
+  {noreply, State};
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
 -spec handle_info(any(), State) -> {noreply, State} when State::#state{}.
-handle_info(reload, State = #state{prev = Prev}) ->
+handle_info(reload, State = #state{prev = Prev, tref = PrevTRef}) ->
   Now = erlang:localtime(),
   compile(Now, Prev, State#state.compilers),
   reload(Now, Prev, State#state.runners),
-  TRef = erlang:send_after(1000, self(), reload),
-  {noreply, State#state{tref = TRef, prev = Now}};
+  case PrevTRef of
+    undefined ->
+      {noreply, State#state{prev = Now}};
+    _ ->
+      TRef = erlang:send_after(1000, self(), reload),
+      {noreply, State#state{tref = TRef, prev = Now}}
+  end;
 handle_info(_Info, State) ->
   {noreply, State}.
 
