@@ -140,10 +140,29 @@ reload_module(Module, Runners) ->
   code:purge(Module),
   case code:load_file(Module) of
     {module, Module} ->
+      case catch execute_rl_fun(Module) of
+        {'EXIT', Error} ->
+          error_logger:error_msg("Error while executing rl funs ~p~n~p~n~p", [Module, Error]);
+        _ ->
+          noop
+      end,
       io:format(" ok.~n"),
       [action(Module, Action, reload) || Action <- Runners];
     {error, Reason} ->
       io:format(" error: ~p.~n", [Reason])
+  end.
+
+execute_rl_fun(Module) ->
+  case lists:keyfind(rl, 1, Module:module_info(attributes)) of
+    false ->
+      noop;
+    {rl, Funs} ->
+      [case F of
+         Fun when is_atom(Fun) ->
+           Module:Fun();
+         {Fun,0} when is_atom(Fun) ->
+           Module:Fun()
+       end || F <- Funs]
   end.
 
 diff(Now, Prev, File) ->
