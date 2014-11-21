@@ -44,11 +44,11 @@ stop() ->
 
 -spec compiler(string(), action()) -> ok.
 compiler(Pattern, Action) ->
-  gen_server:cast(?MODULE, {compiler, Pattern, Action}).
+  gen_server:call(?MODULE, {compiler, Pattern, Action}).
 
 -spec runner(action()) -> ok.
 runner(Action) ->
-  gen_server:cast(?MODULE, {runner, Action}).
+  gen_server:call(?MODULE, {runner, Action}).
 
 reload() ->
   gen_server:cast(?MODULE, reload).
@@ -68,14 +68,14 @@ init([manual]) ->
 handle_call(stop, _From, State = #state{tref = TRef}) ->
   {ok, cancel} = erlang:cancel_timer(TRef),
   {stop, normal, stopped, State};
+handle_call({compiler, Pattern, Action}, _From, State = #state{compilers = Compilers}) ->
+  {reply, ok, State#state{compilers = [{Pattern, Action}|Compilers]}};
+handle_call({runner, Action}, _From, State = #state{runners = Runners}) ->
+  {reply, ok, State#state{runners = [Action|Runners]}};
 handle_call(_Request, _From, State) ->
   {reply, ignored, State}.
 
 -spec handle_cast(_, State) -> {noreply, State} when State::#state{}.
-handle_cast({compiler, Pattern, Action}, State = #state{compilers = Compilers}) ->
-  {noreply, State#state{compilers = [{Pattern, Action}|Compilers]}};
-handle_cast({runner, Action}, State = #state{runners = Runners}) ->
-  {noreply, State#state{runners = [Action|Runners]}};
 handle_cast(reload, State) ->
   self() ! reload,
   {noreply, State};
