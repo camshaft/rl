@@ -7,6 +7,7 @@
 -export([stop/0]).
 -export([compiler/2]).
 -export([runner/1]).
+-export([error_handler/1]).
 -export([reload/0]).
 
 %% gen_server.
@@ -23,6 +24,7 @@
   tref :: reference(),
   compilers = [] :: [{string(), action()}],
   runners = [] :: [action()],
+  error_handlers = [] :: [action()],
   prev :: integer()
 }).
 
@@ -50,6 +52,10 @@ compiler(Pattern, Action) ->
 runner(Action) ->
   gen_server:call(?MODULE, {runner, Action}).
 
+-spec error_handler(action()) -> ok.
+error_handler(Action) ->
+  gen_server:call(?MODULE, {error_handler, Action}).
+
 reload() ->
   gen_server:cast(?MODULE, reload).
 
@@ -72,12 +78,17 @@ handle_call({compiler, Pattern, Action}, _From, State = #state{compilers = Compi
   {reply, ok, State#state{compilers = [{Pattern, Action}|Compilers]}};
 handle_call({runner, Action}, _From, State = #state{runners = Runners}) ->
   {reply, ok, State#state{runners = [Action|Runners]}};
+handle_call({error_handler, Action}, _From, State = #state{error_handlers = Handlers}) ->
+  {reply, ok, State#state{error_handlers = [Action|Handlers]}};
 handle_call(_Request, _From, State) ->
   {reply, ignored, State}.
 
 -spec handle_cast(_, State) -> {noreply, State} when State::#state{}.
 handle_cast(reload, State) ->
   self() ! reload,
+  {noreply, State};
+handle_cast({error, {Module, Reason, Stacktrace}}, State = #state{error_handlers = Handlers}) ->
+  [action(Module, Action, {Reason, Stacktrace}, false) || Action <- Handlers],
   {noreply, State};
 handle_cast(_Msg, State) ->
   {noreply, State}.
@@ -141,15 +152,15 @@ reload_module(Module, Runners) ->
   case code:load_file(Module) of
     {module, Module} ->
       case catch execute_rl_fun(Module) of
-        {'EXIT', Error} ->
-          error_logger:error_msg("Error while executing rl funs ~p~n~p~n~p", [Module, Error]);
+        {'EXIT', Reason} ->
+          gen_server:cast(?MODULE, {error, {Module, Reason, erlang:get_stacktrace()}});
         _ ->
           noop
       end,
       io:format(" ok.~n"),
       [action(Module, Action, reload) || Action <- Runners];
     {error, Reason} ->
-      io:format(" error: ~p.~n", [Reason])
+      gen_server:cast(?MODULE, {error, {Module, Reason, erlang:get_stacktrace()}})
   end.
 
 execute_rl_fun(Module) ->
@@ -174,15 +185,19 @@ diff(Now, Prev, File) ->
     {error, enoent} ->
       noop;
     {error, Reason} ->
-      error_logger:error_msg("Error reading ~s's file info ~p~n", [File, Reason]),
+      gen_server:cast(?MODULE, {error, {File, Reason, erlang:get_stacktrace()}}),
       noop
   end.
 
 action(File, Action, Event) ->
-  try do_action(File, Action, Event)
-  catch
-    Class:Error ->
-      error_logger:error_msg("Error while compiling ~p~n~p:~p~n~p", [File, Class, Error, erlang:get_stacktrace()])
+  action(File, Action, Event, true).
+
+action(File, Action, Event, Report) ->
+  case catch do_action(File, Action, Event) of
+    {'EXIT', Error} when Report ->
+      gen_server:cast(?MODULE, {error, {File, Error, erlang:get_stacktrace()}});
+    _ ->
+      noop
   end.
 
 do_action(_, _, noop) ->
