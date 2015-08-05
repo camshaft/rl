@@ -96,7 +96,9 @@ handle_cast(_Msg, State) ->
 -spec handle_info(any(), State) -> {noreply, State} when State::#state{}.
 handle_info(reload, State = #state{prev = Prev, tref = PrevTRef}) ->
   Now = erlang:localtime(),
-  compile(Now, Prev, State#state.compilers),
+  spawn(fun() ->
+    compile(Now, Prev, State#state.compilers)
+  end),
   reload(Now, Prev, State#state.runners),
   case PrevTRef of
     undefined ->
