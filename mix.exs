@@ -8,6 +8,7 @@ defmodule Rl.MixProject do
       version: "0.1.0",
       elixir: "~> 1.5",
       start_permanent: Mix.env() == :prod,
+      package: package(),
       deps: deps()
     ]
   end
@@ -28,8 +29,17 @@ defmodule Rl.MixProject do
 
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :docs},
+      {:ex_doc, ">= 0.0.0", only: :dev},
       {:file_system, ">= 0.0.0"}
+    ]
+  end
+
+  defp package do
+    [
+      files: ["lib", "mix.exs", "README*"],
+      maintainers: ["Cameron Bytheway"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/camshaft/rl"}
     ]
   end
 end
