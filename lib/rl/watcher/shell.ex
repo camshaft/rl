@@ -10,20 +10,12 @@ defmodule Rl.Watcher.Shell do
     {:ok, command}
   end
 
-  defp handle_output("mix test --stale", "No stale tests\n") do
-    :ok
-  end
+  defp handle_output("mix test" <> _, message) do
+    if Regex.match?(~r/  \d+\) /, message) do
+      message = ["\n  ", String.trim(message), "\n"]
+      :io.put_chars(IO.ANSI.format([:red, message]))
+    end
 
-  defp handle_output("mix test" <> _, "Compiling " <> _) do
-    :ok
-  end
-
-  defp handle_output("mix test" <> _, "\n== " <> _) do
-    # the main compile task will take care of this
-    :ok
-  end
-
-  defp handle_output("mix test" <> _, "Generated " <> _) do
     :ok
   end
 
