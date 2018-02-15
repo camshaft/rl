@@ -1,87 +1,35 @@
-rl
-==
+# rl
 
-automatically reload/compile modules in erlang
+Live programming environment for Elixir/Erlang.
 
-Installation
-------------
+## Installation
 
-### erlang.mk
+Add `:rl` to your dependencies
 
-```make
-DEPS = rl
-dep_rl = https://github.com/camshaft/rl.git master
+```elixir
+def deps do
+  [
+    {:rl, "~> 0.1.0"}
+  ]
+end
 ```
 
-### $ERL_LIBS (globally)
+You can also install it system-wide:
+
+```elixir
+mix archive.install hex rl
+```
+
+## Usage
+
+Boot up an `IEx` shell with the following command:
 
 ```sh
-$ cd $ERL_LIBS
-$ git clone https://github.com/camshaft/rl.git
-$ cd rl; make
+$ iex -S mix rl
 ```
 
-Usage
------
-
-The `rl` application will need to be started.
-
-```erlang
-application:start(rl).
-```
-
-This can be passed on the `erl` command:
+You can also run another command by appending it to the arguments.
 
 ```sh
-$ erl -s rl
+$ iex -S mix rl phx.server
 ```
-
-The default `make` settings can be loaded as well:
-
-```sh
-$ erl -s rl make
-```
-
-A pattern/command may also be specified:
-
-```sh
-$ erl -s rl cmd 'src/*.jxa' 'make joxa'
-```
-
-API
----
-
-### rl:compiler(Wildcard, Action) -> ok when Wildcard::string(), Action::fun().
-
-Adds a compiler to the rl server. The `Action` will be called anytime a file changed that matches the `Wildcard`:
-
-```erlang
-rl:compiler("src/*.erl", fun(File) ->
-  %% do something with File
-  ok
-end).
-```
-
-The name of the event can also be passed. The supported events are `modified`:
-
-```erlang
-rl:compiler("src/*.erl", fun(Event, File) ->
-  %% do something with File
-  ok
-end).
-```
-
-### rl:runner(Action) -> ok when Action::fun().
-
-Adds a runner to the server to be called any time a module is reloaded.
-
-```erlang
-rl:runner(fun(Module) ->
-  %% do something with Module
-  ok
-end).
-```
-
-### rl:make() -> ok.
-
-Runs erlang.mk tasks automatically.
