@@ -26,6 +26,6 @@ defmodule Rl do
   Manually start the rl server
   """
   def start() do
-    Application.ensure_all_started(:exsync)
+    Application.ensure_all_started(:rl)
   end
 end

@@ -10,21 +10,8 @@ defmodule Rl.Watcher.Shell do
     {:ok, command}
   end
 
-  defp handle_output("mix test" <> _, message) do
-    if Regex.match?(~r/  \d+\) /, message) do
-      message = ["\n  ", String.trim(message), "\n"]
-      :io.put_chars(IO.ANSI.format([:red, message]))
-    end
-
-    :ok
-  end
-
-  defp handle_output("mix compile", "\n== " <> _ = error) do
+  defp handle_output("mix " <> _, "\n== " <> _ = error) do
     :io.put_chars(IO.ANSI.format([:red, :bright, error]))
-  end
-
-  defp handle_output("mix compile" <> _, "Generated " <> _) do
-    :ok
   end
 
   defp handle_output("mix " <> _, "** (" <> _ = error) do
@@ -34,6 +21,6 @@ defmodule Rl.Watcher.Shell do
   defp handle_output(command, out) do
     # IO.inspect({command, out})
     _ = command
-    :io.fwrite(out)
+    :io.put_chars(out)
   end
 end
