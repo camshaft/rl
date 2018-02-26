@@ -5,8 +5,8 @@ defmodule Rl.MixProject do
     [
       app: :rl,
       description: "Live programming environment for Elixir/Erlang",
-      version: "0.1.1",
-      elixir: "~> 1.5",
+      version: "0.1.2",
+      elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       package: package(),
       deps: deps()
