@@ -5,9 +5,13 @@ defmodule Rl.Watcher.Shell do
   end
 
   def handle_events(_, command) do
-    Mix.Shell.cmd(command, [], &handle_output(command, &1))
+    run(command)
 
     {:ok, command}
+  end
+
+  def run(command) do
+    Mix.Shell.cmd(command, [], &handle_output(command, &1))
   end
 
   defp handle_output("mix " <> _, "\n== " <> _ = error) do

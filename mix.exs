@@ -5,7 +5,7 @@ defmodule Rl.MixProject do
     [
       app: :rl,
       description: "Live programming environment for Elixir/Erlang",
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.5",
       start_permanent: Mix.env() == :prod,
       package: package(),
@@ -18,6 +18,7 @@ defmodule Rl.MixProject do
       mod: {Rl, []},
       extra_applications: [:logger],
       env: [
+        "{apps,lib,config}/**/*.{ex,exs}": [module: Rl.Watcher.Formatter],
         "{apps,lib,config}/**/*.{erl,ex,exs,eex,xrl,yrl,hrl}": "mix compile",
         "apps/**/mix.exs": "mix do deps.get, deps.compile, compile",
         "mix.exs": "mix do deps.get, deps.compile, compile",
